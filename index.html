@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SEO Runner</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    canvas { background: #111; display: block; margin: 0 auto; }
+    #score { color: #fff; font-family: sans-serif; text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="800" height="400"></canvas>
+  <div id="score">Score: 0</div>
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    let player = { x: 50, y: 300, width: 40, height: 40, dy: 0, grounded: true };
+    let gravity = 1.5;
+    let isJumping = false;
+    let score = 0;
+
+    let reviews = Array.from({ length: 5 }, (_, i) => ({
+      x: 200 + i * 150,
+      y: 300,
+      collected: false
+    }));
+
+    let portal = { x: 1000, y: 280, width: 40, height: 60 };
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Ground
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, 350, canvas.width, 50);
+
+      // Player
+      ctx.fillStyle = 'gold';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Reviews
+      ctx.fillStyle = 'aqua';
+      reviews.forEach(review => {
+        if (!review.collected) {
+          ctx.beginPath();
+          ctx.arc(review.x, review.y, 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // Portal
+      ctx.fillStyle = 'purple';
+      ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
+
+      // Gravity + Jump
+      if (!player.grounded) {
+        player.dy += gravity;
+        player.y += player.dy;
+      }
+
+      // Collision with ground
+      if (player.y + player.height >= 350) {
+        player.grounded = true;
+        player.y = 310;
+        player.dy = 0;
+      }
+
+      // Collect reviews
+      reviews.forEach(review => {
+        if (!review.collected && player.x < review.x + 10 && player.x + player.width > review.x &&
+          player.y < review.y + 10 && player.y + player.height > review.y) {
+          review.collected = true;
+          score++;
+          document.getElementById('score').innerText = `Score: ${score}`;
+        }
+      });
+
+      // Win condition
+      if (score >= 5 && player.x + player.width > portal.x) {
+        document.getElementById('score').innerText = '🏆 YOU COLLECTED SEO GOLD!';
+        cancelAnimationFrame(animation);
+      }
+
+      // Auto-run
+      player.x += 2;
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' && player.grounded) {
+        player.dy = -20;
+        player.grounded = false;
+      }
+    });
+
+    let animation = requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
